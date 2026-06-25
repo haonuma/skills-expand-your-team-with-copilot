@@ -348,6 +348,68 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  function getActivityShareContent(name, details) {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
+      name
+    )}`;
+    const shareText = `Check out the ${name} activity at Mergington High School! ${formatSchedule(
+      details
+    )}`;
+
+    return { shareUrl, shareText };
+  }
+
+  async function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "absolute";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textArea);
+
+    if (!copied) {
+      throw new Error("Clipboard copy command failed");
+    }
+  }
+
+  async function handleShareAction(platform, name, details) {
+    const { shareUrl, shareText } = getActivityShareContent(name, details);
+
+    try {
+      if (platform === "copy") {
+        await copyToClipboard(shareUrl);
+        showMessage("Activity link copied to clipboard.", "success");
+        return;
+      }
+
+      if (platform === "facebook") {
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          shareUrl
+        )}`;
+        window.open(facebookUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      if (platform === "x") {
+        const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          `${shareText} ${shareUrl}`
+        )}`;
+        window.open(xUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      console.error("Error sharing activity:", error);
+      showMessage("Unable to share activity right now.", "error");
+    }
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -621,6 +683,17 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <div class="share-buttons" aria-label="Share ${name}">
+          <button class="share-button" data-share="copy" type="button">
+            Copy Link
+          </button>
+          <button class="share-button" data-share="facebook" type="button">
+            Facebook
+          </button>
+          <button class="share-button" data-share="x" type="button">
+            X
+          </button>
+        </div>
       </div>
     `;
 
@@ -639,6 +712,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        handleShareAction(button.dataset.share, name, details);
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
