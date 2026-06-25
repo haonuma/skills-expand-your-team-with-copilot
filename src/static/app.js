@@ -328,8 +328,12 @@ document.addEventListener("DOMContentLoaded", () => {
     textArea.style.left = "-9999px";
     document.body.appendChild(textArea);
     textArea.select();
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
     document.body.removeChild(textArea);
+
+    if (!copied) {
+      throw new Error("Clipboard copy command failed");
+    }
   }
 
   async function handleShareAction(platform, name, details) {
@@ -352,8 +356,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (platform === "x") {
         const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          shareText
-        )}&url=${encodeURIComponent(shareUrl)}`;
+          `${shareText} ${shareUrl}`
+        )}`;
         window.open(xUrl, "_blank", "noopener,noreferrer");
       }
     } catch (error) {
