@@ -228,13 +228,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initializeTheme() {
     const savedTheme = localStorage.getItem(themeStorageKey);
-    const initialTheme =
-      savedTheme === "dark" || savedTheme === "light"
-        ? savedTheme
-        : window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
+    let initialTheme = "light";
+    if (savedTheme === "dark" || savedTheme === "light") {
+      initialTheme = savedTheme;
+    } else if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      initialTheme = "dark";
+    }
     applyTheme(initialTheme);
   }
 
