@@ -228,7 +228,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initializeTheme() {
     const savedTheme = localStorage.getItem(themeStorageKey);
-    const initialTheme = savedTheme === "dark" ? "dark" : "light";
+    const initialTheme =
+      savedTheme === "dark" || savedTheme === "light"
+        ? savedTheme
+        : window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
     applyTheme(initialTheme);
   }
 
